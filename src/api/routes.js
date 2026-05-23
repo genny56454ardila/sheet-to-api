@@ -1,19 +1,28 @@
 const express = require('express');
-const { handleSheetRequest } = require('./handler');
-const { validateSheetId } = require('./middleware');
+const { validateSheetId, validateQueryParameters, requestLogger } = require('./middleware');
+const { createAuthMiddleware } = require('./auth');
+const { loadAuthConfig } = require('../config/auth');
+const sheetHandler = require('./sheetHandler');
+const { createRateLimiter } = require('./rateLimit');
 
 const router = express.Router();
 
-/**
- * GET /api/sheets/:sheetId
- * Fetch all rows from default sheet range
- */
-router.get('/sheets/:sheetId', validateSheetId, handleSheetRequest);
+const authConfig = loadAuthConfig();
+const auth = createAuthMiddleware(authConfig);
 
-/**
- * GET /api/sheets/:sheetId/:range
- * Fetch rows from a specific named range or sheet tab
- */
-router.get('/sheets/:sheetId/:range', validateSheetId, handleSheetRequest);
+const rateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX || '60', 10)
+});
+
+router.use(requestLogger);
+router.use(rateLimiter);
+router.use(auth);
+
+router.get('/sheet/:sheetId', validateSheetId, validateQueryParameters, sheetHandler);
+
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 module.exports = router;
