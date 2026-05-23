@@ -33,6 +33,12 @@ describe('fetchSheetData', () => {
     expect(result).toEqual([]);
   });
 
+  test('returns empty array when values is undefined', async () => {
+    google.__mockGet.mockResolvedValue({ data: {} });
+    const result = await fetchSheetData('spreadsheet-id');
+    expect(result).toEqual([]);
+  });
+
   test('maps headers and rows into objects', async () => {
     google.__mockGet.mockResolvedValue({
       data: {
