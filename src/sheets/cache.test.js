@@ -44,6 +44,23 @@ describe('cache', () => {
       expect(result).toBeNull();
       jest.useRealTimers();
     });
+
+    it('returns data before TTL expires', () => {
+      jest.useFakeTimers();
+      const data = [{ id: 1 }];
+      setCachedData('ttl-key', data, 1000);
+      jest.advanceTimersByTime(500);
+      const result = getCachedData('ttl-key');
+      expect(result).toEqual(data);
+      jest.useRealTimers();
+    });
+
+    it('overwrites existing data for the same key', () => {
+      setCachedData('dup-key', [{ v: 1 }]);
+      setCachedData('dup-key', [{ v: 2 }]);
+      const result = getCachedData('dup-key');
+      expect(result).toEqual([{ v: 2 }]);
+    });
   });
 
   describe('invalidateCache', () => {
@@ -75,6 +92,14 @@ describe('cache', () => {
       setCachedData('b', []);
       const stats = getCacheStats();
       expect(stats.size).toBe(2);
+    });
+
+    it('decreases size after invalidating a specific key', () => {
+      setCachedData('a', []);
+      setCachedData('b', []);
+      invalidateCache('a');
+      const stats = getCacheStats();
+      expect(stats.size).toBe(1);
     });
   });
 });
