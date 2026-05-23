@@ -11,6 +11,17 @@ async function handleSheetRequest(req, res) {
     return res.status(400).json({ error: 'sheetId is required' });
   }
 
+  const pageNum = page ? parseInt(page, 10) : 1;
+  const limitNum = limit ? parseInt(limit, 10) : 100;
+
+  if (isNaN(pageNum) || pageNum < 1) {
+    return res.status(400).json({ error: 'page must be a positive integer' });
+  }
+
+  if (isNaN(limitNum) || limitNum < 1 || limitNum > 1000) {
+    return res.status(400).json({ error: 'limit must be an integer between 1 and 1000' });
+  }
+
   const cacheKey = buildCacheKey(sheetId, range);
   let records;
 
@@ -24,10 +35,7 @@ async function handleSheetRequest(req, res) {
       setCachedData(cacheKey, records);
     }
 
-    const pagination = {
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 100,
-    };
+    const pagination = { page: pageNum, limit: limitNum };
 
     const result = applyFilterAndPagination(records, filters, pagination);
 
