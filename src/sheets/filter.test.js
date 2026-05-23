@@ -33,6 +33,11 @@ describe('filterRecords', () => {
     const result = filterRecords(records, { city: 'Boston' });
     expect(result).toHaveLength(0);
   });
+
+  it('returns empty array when given empty records', () => {
+    const result = filterRecords([], { city: 'NYC' });
+    expect(result).toHaveLength(0);
+  });
 });
 
 describe('paginateRecords', () => {
@@ -57,6 +62,11 @@ describe('paginateRecords', () => {
   it('returns empty array for out-of-range page', () => {
     const result = paginateRecords(records, 10, 2);
     expect(result).toHaveLength(0);
+  });
+
+  it('returns all records when limit exceeds total count', () => {
+    const result = paginateRecords(records, 1, 100);
+    expect(result).toHaveLength(5);
   });
 });
 
