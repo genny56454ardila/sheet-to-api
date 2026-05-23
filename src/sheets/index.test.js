@@ -49,6 +49,12 @@ describe('querySheet', () => {
     });
   });
 
+  it('throws 400 on non-numeric page param', async () => {
+    await expect(querySheet('sheet1', { page: 'abc' })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
   it('stores result in cache after fetch', async () => {
     await querySheet('sheet1', {});
     expect(cache.setCachedData).toHaveBeenCalledWith('key-123', expect.objectContaining({
@@ -61,5 +67,13 @@ describe('querySheet', () => {
     const result = await querySheet('sheet1', { page: '1', pageSize: '2' });
     expect(result.records).toHaveLength(2);
     expect(result.pageSize).toBe(2);
+  });
+
+  it('does not store cached data back into cache', async () => {
+    const cached = { records: [{ name: 'Alice' }], total: 1, page: 1, pageSize: 100 };
+    cache.getCachedData.mockReturnValue(cached);
+
+    await querySheet('sheet1', {});
+    expect(cache.setCachedData).not.toHaveBeenCalled();
   });
 });
